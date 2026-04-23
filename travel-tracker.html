@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Journey — Travel Tracker</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231a1a2e'/%3E%3Ccircle cx='32' cy='32' r='18' fill='none' stroke='%23c9622f' stroke-width='2.5'/%3E%3Ccircle cx='32' cy='32' r='3' fill='%23c9622f'/%3E%3Cline x1='32' y1='14' x2='32' y2='18' stroke='%23c9622f' stroke-width='2' stroke-linecap='round'/%3E%3Cline x1='32' y1='46' x2='32' y2='50' stroke='%23c9622f' stroke-width='2' stroke-linecap='round'/%3E%3Cline x1='14' y1='32' x2='18' y2='32' stroke='%23c9622f' stroke-width='2' stroke-linecap='round'/%3E%3Cline x1='46' y1='32' x2='50' y2='32' stroke='%23c9622f' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M32 20 L35 29 L32 32 L29 29 Z' fill='%23f5f0e8'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Journey">
+<meta name="theme-color" content="#1a1a2e">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1a2e;
+    --paper: #f5f0e8;
+    --cream: #ede8dc;
+    --accent: #c9622f;
+    --accent-light: #e8845a;
+    --muted: #8a8070;
+    --border: #d4cfc5;
+    --card: #ffffff;
+    --green: #3a7d44;
+    --blue: #2a5f8f;
+    --radius: 12px;
+    --shadow: 0 2px 16px rgba(26,26,46,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    font-size: 15px;
+  }
+  h1, h2, h3 { font-family: 'Playfair Display', serif; }
+
+  /* HEADER */
+  header {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 18px 20px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  header h1 { font-size: 1.5rem; letter-spacing: 0.02em; }
+  header .subtitle { font-size: 0.72rem; color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; margin-top: 1px; }
+  .btn-new-trip {
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* MAIN */
+  main { padding: 16px; max-width: 600px; margin: 0 auto; }
+
+  /* TRIP CARDS */
+  .trip-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    margin-bottom: 14px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .trip-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    cursor: pointer;
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .trip-header h2 { font-size: 1.1rem; }
+  .trip-meta { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+  .trip-actions { display: flex; gap: 8px; align-items: center; }
+  .icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--paper);
+    opacity: 0.7;
+    font-size: 1.1rem;
+    padding: 4px;
+    line-height: 1;
+  }
+  .icon-btn:hover { opacity: 1; }
+  .trip-body { padding: 12px 14px; }
+  .trip-toggle { font-size: 0.9rem; color: var(--accent); cursor: pointer; font-weight: 500; }
+
+  /* SECTION LABELS */
+  .section-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 12px 0 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* LEG ITEMS */
+  .leg-item {
+    background: var(--cream);
+    border-radius: 8px;
+    padding: 11px 13px;
+    margin-bottom: 8px;
+    border-left: 3px solid var(--accent);
+    position: relative;
+  }
+  .leg-item.transport-plane { border-left-color: var(--blue); }
+  .leg-item.transport-train { border-left-color: var(--green); }
+  .leg-item.transport-car { border-left-color: #8a6a2e; }
+  .leg-item.transport-bus { border-left-color: #6a2e8a; }
+  .leg-item.transport-ferry { border-left-color: #2e8a8a; }
+
+  .leg-header { display: flex; justify-content: space-between; align-items: flex-start; }
+  .leg-route { font-weight: 500; font-size: 0.95rem; }
+  .leg-route .arrow { color: var(--accent); margin: 0 4px; }
+  .leg-date { font-size: 0.75rem; color: var(--muted); }
+  .leg-details { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .badge {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: white;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+  .badge.mode { background: var(--ink); color: white; border-color: var(--ink); text-transform: uppercase; letter-spacing: 0.06em; }
+  .booking-ref {
+    font-family: 'Courier New', monospace;
+    font-size: 0.78rem;
+    background: var(--ink);
+    color: #a8e6cf;
+    padding: 2px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    border: none;
+    font-weight: 600;
+  }
+  .booking-ref:active { opacity: 0.7; }
+  .leg-notes { margin-top: 6px; font-size: 0.8rem; color: var(--muted); font-style: italic; }
+  .leg-item-actions { display: flex; gap: 4px; }
+  .small-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 3px 7px;
+    font-size: 0.7rem;
+    cursor: pointer;
+    color: var(--muted);
+  }
+  .small-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ACCOMMODATION */
+  .accom-item {
+    background: var(--cream);
+    border-radius: 8px;
+    padding: 11px 13px;
+    margin-bottom: 8px;
+    border-left: 3px solid #8a6a2e;
+  }
+  .accom-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--blue);
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    text-underline-offset: 3px;
+    background: none;
+    border: none;
+    font-family: inherit;
+    padding: 0;
+  }
+  .accom-dates { font-size: 0.78rem; color: var(--muted); margin-top: 3px; }
+
+  /* DOCS */
+  .doc-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-right: 6px;
+    margin-bottom: 4px;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .doc-item:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ADD BUTTONS */
+  .add-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 0.8rem;
+    color: var(--muted);
+    cursor: pointer;
+    width: 100%;
+    margin-bottom: 4px;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .add-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(26,26,46,0.6);
+    z-index: 200;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: white;
+    border-radius: 20px 20px 0 0;
+    padding: 20px 18px 32px;
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slideUp 0.25s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal-handle {
+    width: 36px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 0 auto 16px;
+  }
+  .modal-title { font-size: 1.15rem; margin-bottom: 16px; font-family: 'Playfair Display', serif; }
+
+  /* FORM */
+  .field { margin-bottom: 13px; }
+  label { display: block; font-size: 0.75rem; font-weight: 500; color: var(--muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.08em; }
+  input, select, textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    background: var(--paper);
+    color: var(--ink);
+    outline: none;
+    appearance: none;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); background: white; }
+  textarea { min-height: 70px; resize: vertical; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .mode-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 3px; }
+  .mode-btn {
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 4px;
+    text-align: center;
+    cursor: pointer;
+    font-size: 0.65rem;
+    color: var(--muted);
+    background: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .mode-btn .icon { font-size: 1.3rem; }
+  .mode-btn.selected { border-color: var(--accent); color: var(--accent); background: #fdf5f0; }
+  .form-actions { display: flex; gap: 10px; margin-top: 18px; }
+  .btn-primary {
+    flex: 1;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 13px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .btn-secondary {
+    background: var(--paper);
+    color: var(--muted);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 13px 18px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  /* DATALIST */
+  datalist { display: none; }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+  .empty-state .big-icon { font-size: 3rem; margin-bottom: 12px; }
+  .empty-state p { font-size: 0.9rem; line-height: 1.6; }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--ink);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    z-index: 999;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+
+  /* CONFIRM MODAL */
+  .confirm-modal {
+    background: white;
+    border-radius: 20px 20px 0 0;
+    padding: 28px 20px 36px;
+    width: 100%;
+    max-width: 600px;
+    text-align: center;
+    animation: slideUp 0.22s ease;
+  }
+  .confirm-icon { font-size: 2.4rem; margin-bottom: 10px; }
+  .confirm-title { font-family: 'Playfair Display', serif; font-size: 1.15rem; margin-bottom: 8px; }
+  .confirm-msg { font-size: 0.85rem; color: var(--muted); line-height: 1.5; margin-bottom: 22px; }
+  .confirm-actions { display: flex; gap: 10px; }
+  .btn-danger {
+    flex: 1;
+    background: #c0392b;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 13px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  /* UPCOMING SECTION */
+  .upcoming-section {
+    margin-bottom: 20px;
+  }
+  .upcoming-title {
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .upcoming-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .upcoming-scroll {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    scrollbar-width: none;
+  }
+  .upcoming-scroll::-webkit-scrollbar { display: none; }
+  .upcoming-card {
+    min-width: 160px;
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 12px;
+    padding: 14px 14px 12px;
+    flex-shrink: 0;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .upcoming-card::before {
+    content: '';
+    position: absolute;
+    top: -18px; right: -18px;
+    width: 70px; height: 70px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+  }
+  .upcoming-card .uc-mode { font-size: 1.4rem; margin-bottom: 6px; }
+  .upcoming-card .uc-route { font-size: 0.82rem; font-weight: 500; line-height: 1.3; }
+  .upcoming-card .uc-route .uc-arrow { color: var(--accent-light); margin: 0 3px; }
+  .upcoming-card .uc-date { font-size: 0.7rem; color: var(--muted); margin-top: 5px; }
+  .upcoming-card .uc-trip { font-size: 0.68rem; color: var(--muted); margin-top: 3px; letter-spacing: 0.04em; }
+  .upcoming-card .uc-days {
+    position: absolute;
+    top: 12px; right: 12px;
+    font-size: 0.65rem;
+    background: var(--accent);
+    color: white;
+    border-radius: 10px;
+    padding: 2px 7px;
+    font-weight: 600;
+  }
+  .upcoming-card.accom-card { background: #1a2e1a; }
+  .upcoming-card.today-card { background: #2e1a0e; }
+  .no-upcoming {
+    font-size: 0.82rem;
+    color: var(--muted);
+    font-style: italic;
+    padding: 4px 0;
+  }
+
+  /* EXPORT MODAL */
+  .export-text {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    font-size: 0.8rem;
+    font-family: 'Courier New', monospace;
+    white-space: pre-wrap;
+    color: var(--ink);
+    max-height: 50vh;
+    overflow-y: auto;
+    margin-bottom: 14px;
+    line-height: 1.6;
+  }
+  .copy-all-btn {
+    width: 100%;
+    background: var(--ink);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 13px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+  }
+
+  /* FILE INPUT */
+  .file-input-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1.5px dashed var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .file-input-label:hover { border-color: var(--accent); color: var(--accent); }
+  #fileInput { display: none; }
+  .file-preview { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .file-chip {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+  .file-chip .remove { cursor: pointer; color: var(--accent); font-weight: bold; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Journey</h1>
+    <div class="subtitle">Travel Tracker</div>
+  </div>
+  <button class="btn-new-trip" onclick="openTripModal()">＋ New Trip</button>
+</header>
+
+<main>
+  <div class="upcoming-section" id="upcomingSection"></div>
+  <div id="tripList"></div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<!-- DATALISTS for remembered locations -->
+<datalist id="locationSuggestions"></datalist>
+
+<!-- TRIP MODAL -->
+<div class="modal-overlay" id="tripModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="tripModalTitle">New Trip</div>
+    <div class="field">
+      <label>Trip Name</label>
+      <input type="text" id="tripName" placeholder="e.g. Barcelona Weekend">
+    </div>
+    <div class="form-actions">
+      <button class="btn-secondary" onclick="closeTripModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveTrip()">Save Trip</button>
+    </div>
+  </div>
+</div>
+
+<!-- LEG MODAL -->
+<div class="modal-overlay" id="legModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="legModalTitle">Add Transport Leg</div>
+
+    <div class="field">
+      <label>Mode of Transport</label>
+      <div class="mode-grid">
+        <button class="mode-btn" data-mode="plane" onclick="selectMode('plane')"><span class="icon">✈️</span>Plane</button>
+        <button class="mode-btn" data-mode="train" onclick="selectMode('train')"><span class="icon">🚆</span>Train</button>
+        <button class="mode-btn" data-mode="car" onclick="selectMode('car')"><span class="icon">🚗</span>Car</button>
+        <button class="mode-btn" data-mode="bus" onclick="selectMode('bus')"><span class="icon">🚌</span>Bus</button>
+        <button class="mode-btn" data-mode="ferry" onclick="selectMode('ferry')"><span class="icon">⛴️</span>Ferry</button>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="legDate">
+      </div>
+      <div class="field">
+        <label>Time</label>
+        <input type="time" id="legTime">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>From</label>
+      <input type="text" id="legFrom" placeholder="Departure" list="locationSuggestions" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>To</label>
+      <input type="text" id="legTo" placeholder="Destination" list="locationSuggestions" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>Provider</label>
+      <input type="text" id="legProvider" placeholder="e.g. Iberia, Renfe, Europcar">
+    </div>
+    <div class="field">
+      <label>Booking Reference</label>
+      <input type="text" id="legBooking" placeholder="ABC123" style="text-transform:uppercase;">
+    </div>
+    <div class="field">
+      <label>Notes</label>
+      <textarea id="legNotes" placeholder="Seat number, terminal, gate, luggage info..."></textarea>
+    </div>
+
+    <div class="field">
+      <label>Documents</label>
+      <label class="file-input-label" for="fileInput">📎 Attach file (ticket, boarding pass…)</label>
+      <input type="file" id="fileInput" accept="image/*,.pdf" onchange="handleFile(event)">
+      <div class="file-preview" id="filePreview"></div>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn-secondary" onclick="closeLegModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveLeg()">Save Leg</button>
+    </div>
+  </div>
+</div>
+
+<!-- ACCOMMODATION MODAL -->
+<div class="modal-overlay" id="accomModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="accomModalTitle">Add Accommodation</div>
+    <div class="field">
+      <label>Name</label>
+      <input type="text" id="accomName" placeholder="Hotel, Airbnb, Hostel…">
+    </div>
+    <div class="field">
+      <label>Address / City</label>
+      <input type="text" id="accomAddress" placeholder="Carrer de Mallorca 401, Barcelona">
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Check-in</label>
+        <input type="date" id="accomCheckin">
+      </div>
+      <div class="field">
+        <label>Check-out</label>
+        <input type="date" id="accomCheckout">
+      </div>
+    </div>
+    <div class="field">
+      <label>Booking Reference</label>
+      <input type="text" id="accomBooking" placeholder="BK-9988" style="text-transform:uppercase;">
+    </div>
+    <div class="field">
+      <label>Notes</label>
+      <textarea id="accomNotes" placeholder="Check-in instructions, key code, parking…"></textarea>
+    </div>
+
+    <div class="field">
+      <label>Documents</label>
+      <label class="file-input-label" for="accomFileInput">📎 Attach file (voucher, confirmation…)</label>
+      <input type="file" id="accomFileInput" accept="image/*,.pdf" onchange="handleAccomFile(event)">
+      <div class="file-preview" id="accomFilePreview"></div>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn-secondary" onclick="closeAccomModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveAccom()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="confirm-modal">
+    <div class="confirm-icon">🗑️</div>
+    <div class="confirm-title">Delete Trip?</div>
+    <div class="confirm-msg">This will permanently delete the trip and all its transport legs and accommodation. This cannot be undone.</div>
+    <div class="confirm-actions">
+      <button class="btn-secondary" onclick="closeConfirm()">Cancel</button>
+      <button class="btn-danger" id="confirmDeleteBtn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- EXPORT MODAL -->
+<div class="modal-overlay" id="exportModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Trip Summary</div>
+    <div class="export-text" id="exportText"></div>
+    <button class="copy-all-btn" onclick="copyExport()">📋 Copy to Clipboard</button>
+    <div class="form-actions" style="margin-top:10px;">
+      <button class="btn-secondary" style="width:100%;" onclick="closeExportModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── DATA ───────────────────────────────────────────────────────────────────
+let data = JSON.parse(localStorage.getItem('journeyData') || '{"trips":[]}');
+let editingTripId = null;
+let editingLegId = null;
+let editingAccomId = null;
+let currentTripId = null;
+let selectedMode = '';
+let pendingDocs = [];
+let pendingAccomDocs = [];
+
+function save() {
+  localStorage.setItem('journeyData', JSON.stringify(data));
+}
+
+function allLocations() {
+  const locs = new Set();
+  data.trips.forEach(t => t.legs.forEach(l => { locs.add(l.from); locs.add(l.to); }));
+  return [...locs].filter(Boolean);
+}
+
+function updateLocationSuggestions() {
+  const dl = document.getElementById('locationSuggestions');
+  dl.innerHTML = allLocations().map(l => `<option value="${l}">`).join('');
+}
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+
+// ─── TOAST ───────────────────────────────────────────────────────────────────
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+// ─── RENDER ──────────────────────────────────────────────────────────────────
+function render() {
+  updateLocationSuggestions();
+  renderUpcoming();
+  const container = document.getElementById('tripList');
+  if (!data.trips.length) {
+    container.innerHTML = `<div class="empty-state"><div class="big-icon">🌍</div><p>No trips yet.<br>Tap <strong>+ New Trip</strong> to get started.</p></div>`;
+    return;
+  }
+  container.innerHTML = data.trips.map(trip => renderTrip(trip)).join('');
+}
+
+const modeEmoji = { plane:'✈️', train:'🚆', car:'🚗', bus:'🚌', ferry:'⛴️' };
+
+function renderTrip(trip) {
+  const legs = (trip.legs || []).map(leg => `
+    <div class="leg-item transport-${leg.mode}" onclick="editLeg('${trip.id}','${leg.id}')" style="cursor:pointer;">
+      <div class="leg-header">
+        <div>
+          <div class="leg-route">${leg.from} <span class="arrow">→</span> ${leg.to}</div>
+          <div class="leg-date">${leg.date || ''}${leg.time ? ' · ' + leg.time : ''}${leg.provider ? ' · ' + leg.provider : ''}</div>
+        </div>
+        <div class="leg-item-actions">
+          <button class="small-btn" onclick="event.stopPropagation();deleteLeg('${trip.id}','${leg.id}')">✕</button>
+        </div>
+      </div>
+      <div class="leg-details">
+        <span class="badge mode">${modeEmoji[leg.mode] || ''} ${leg.mode}</span>
+        ${leg.booking ? `<button class="booking-ref" onclick="event.stopPropagation();copyRef('${leg.booking}')">📋 ${leg.booking}</button>` : ''}
+      </div>
+      ${leg.notes ? `<div class="leg-notes">📌 ${leg.notes}</div>` : ''}
+      ${(leg.docs || []).length ? `<div style="margin-top:8px;">${leg.docs.map(d => `<a class="doc-item" href="${d.data}" download="${d.name}" target="_blank" onclick="event.stopPropagation()">📄 ${d.name}</a>`).join('')}</div>` : ''}
+    </div>
+  `).join('');
+
+  const accoms = (trip.accoms || []).map(a => `
+    <div class="accom-item" onclick="editAccom('${trip.id}','${a.id}')" style="cursor:pointer;">
+      <div class="leg-header">
+        <div>
+          <button class="accom-name" onclick="event.stopPropagation();openMaps('${encodeURIComponent((a.address||a.name))}')">${a.name}</button>
+          ${a.address ? `<div class="leg-date">📍 ${a.address}</div>` : ''}
+          <div class="accom-dates">${a.checkin || '?'} → ${a.checkout || '?'}${a.booking ? ' · ' : ''}${a.booking ? `<button class="booking-ref" style="display:inline-flex;margin-left:6px;" onclick="event.stopPropagation();copyRef('${a.booking}')">📋 ${a.booking}</button>` : ''}</div>
+          ${a.notes ? `<div class="leg-notes" style="margin-top:5px;">📌 ${a.notes}</div>` : ''}
+          ${(a.docs || []).length ? `<div style="margin-top:6px;">${a.docs.map(d => `<a class="doc-item" href="${d.data}" download="${d.name}" target="_blank" onclick="event.stopPropagation()">📄 ${d.name}</a>`).join('')}</div>` : ''}
+        </div>
+        <div class="leg-item-actions">
+          <button class="small-btn" onclick="event.stopPropagation();deleteAccom('${trip.id}','${a.id}')">✕</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  const total = (trip.legs||[]).length + (trip.accoms||[]).length;
+
+  return `
+    <div class="trip-card" id="trip-${trip.id}">
+      <div class="trip-header" onclick="toggleTrip('${trip.id}')">
+        <div>
+          <h2>${trip.name}</h2>
+          <div class="trip-meta">${total} item${total !== 1 ? 's' : ''}</div>
+        </div>
+        <div class="trip-actions" onclick="event.stopPropagation()">
+          <button class="icon-btn" onclick="openExport('${trip.id}')" title="Export">📤</button>
+          <button class="icon-btn" onclick="editTrip('${trip.id}')" title="Edit">✏️</button>
+          <button class="icon-btn" onclick="deleteTrip('${trip.id}')" title="Delete">🗑️</button>
+        </div>
+      </div>
+      <div class="trip-body" id="body-${trip.id}">
+        ${legs.length ? `<div class="section-label">Transport</div>${legs}` : ''}
+        ${accoms.length ? `<div class="section-label">Accommodation</div>${accoms}` : ''}
+        <button class="add-btn" onclick="openLegModal('${trip.id}')">＋ Add transport leg</button>
+        <button class="add-btn" onclick="openAccomModal('${trip.id}')">＋ Add accommodation</button>
+      </div>
+    </div>
+  `;
+}
+
+function toggleTrip(id) {
+  const body = document.getElementById('body-' + id);
+  body.style.display = body.style.display === 'none' ? '' : 'none';
+}
+
+// ─── TRIP CRUD ────────────────────────────────────────────────────────────────
+function openTripModal(id) {
+  editingTripId = id || null;
+  document.getElementById('tripModalTitle').textContent = id ? 'Edit Trip' : 'New Trip';
+  document.getElementById('tripName').value = id ? data.trips.find(t=>t.id===id).name : '';
+  document.getElementById('tripModal').classList.add('open');
+}
+function closeTripModal() { document.getElementById('tripModal').classList.remove('open'); }
+function editTrip(id) { openTripModal(id); }
+
+function saveTrip() {
+  const name = document.getElementById('tripName').value.trim();
+  if (!name) return toast('Please enter a trip name');
+  if (editingTripId) {
+    data.trips.find(t => t.id === editingTripId).name = name;
+  } else {
+    data.trips.unshift({ id: uid(), name, legs: [], accoms: [] });
+  }
+  save(); render(); closeTripModal();
+}
+
+function deleteTrip(id) {
+  const trip = data.trips.find(t => t.id === id);
+  const modal = document.getElementById('confirmModal');
+  document.querySelector('.confirm-msg').textContent =
+    `"${trip.name}" and all its legs and accommodation will be permanently deleted.`;
+  modal.classList.add('open');
+  document.getElementById('confirmDeleteBtn').onclick = () => {
+    data.trips = data.trips.filter(t => t.id !== id);
+    save(); render(); closeConfirm();
+    toast('Trip deleted');
+  };
+}
+function closeConfirm() { document.getElementById('confirmModal').classList.remove('open'); }
+
+// ─── LEG CRUD ────────────────────────────────────────────────────────────────
+function openLegModal(tripId) {
+  currentTripId = tripId;
+  editingLegId = null;
+  selectedMode = '';
+  pendingDocs = [];
+  document.getElementById('legModalTitle').textContent = 'Add Transport Leg';
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('selected'));
+  ['legDate','legTime','legFrom','legTo','legProvider','legBooking','legNotes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('filePreview').innerHTML = '';
+  document.getElementById('legModal').classList.add('open');
+}
+
+function editLeg(tripId, legId) {
+  const trip = data.trips.find(t => t.id === tripId);
+  const leg = trip.legs.find(l => l.id === legId);
+  currentTripId = tripId;
+  editingLegId = legId;
+  selectedMode = leg.mode;
+  pendingDocs = [...(leg.docs || [])];
+  document.getElementById('legModalTitle').textContent = 'Edit Transport Leg';
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('selected', b.dataset.mode === leg.mode));
+  document.getElementById('legDate').value = leg.date || '';
+  document.getElementById('legTime').value = leg.time || '';
+  document.getElementById('legFrom').value = leg.from || '';
+  document.getElementById('legTo').value = leg.to || '';
+  document.getElementById('legProvider').value = leg.provider || '';
+  document.getElementById('legBooking').value = leg.booking || '';
+  document.getElementById('legNotes').value = leg.notes || '';
+  renderFilePreview('filePreview', pendingDocs, 'leg');
+  document.getElementById('legModal').classList.add('open');
+}
+
+function closeLegModal() { document.getElementById('legModal').classList.remove('open'); }
+
+function selectMode(mode) {
+  selectedMode = mode;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('selected', b.dataset.mode === mode));
+}
+
+function handleFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    pendingDocs.push({ id: uid(), name: file.name, data: ev.target.result });
+    renderFilePreview('filePreview', pendingDocs, 'leg');
+  };
+  reader.readAsDataURL(file);
+}
+
+function renderFilePreview(containerId, docs, type) {
+  document.getElementById(containerId).innerHTML = docs.map(d => `
+    <div class="file-chip">📄 ${d.name} <span class="remove" onclick="removeDoc('${d.id}','${type}')">×</span></div>
+  `).join('');
+}
+
+function removeDoc(docId, type) {
+  if (type === 'leg') { pendingDocs = pendingDocs.filter(d => d.id !== docId); renderFilePreview('filePreview', pendingDocs, 'leg'); }
+  else { pendingAccomDocs = pendingAccomDocs.filter(d => d.id !== docId); renderFilePreview('accomFilePreview', pendingAccomDocs, 'accom'); }
+}
+
+function saveLeg() {
+  if (!selectedMode) return toast('Please select a transport mode');
+  const from = document.getElementById('legFrom').value.trim();
+  const to = document.getElementById('legTo').value.trim();
+  if (!from || !to) return toast('Please enter departure and destination');
+  const trip = data.trips.find(t => t.id === currentTripId);
+
+  if (editingLegId) {
+    // Update existing leg in place
+    const leg = trip.legs.find(l => l.id === editingLegId);
+    leg.mode = selectedMode;
+    leg.date = document.getElementById('legDate').value;
+    leg.time = document.getElementById('legTime').value;
+    leg.from = from;
+    leg.to = to;
+    leg.provider = document.getElementById('legProvider').value.trim();
+    leg.booking = document.getElementById('legBooking').value.trim().toUpperCase();
+    leg.notes = document.getElementById('legNotes').value.trim();
+    leg.docs = [...pendingDocs];
+  } else {
+    const leg = {
+      id: uid(),
+      mode: selectedMode,
+      date: document.getElementById('legDate').value,
+      time: document.getElementById('legTime').value,
+      from, to,
+      provider: document.getElementById('legProvider').value.trim(),
+      booking: document.getElementById('legBooking').value.trim().toUpperCase(),
+      notes: document.getElementById('legNotes').value.trim(),
+      docs: [...pendingDocs]
+    };
+    trip.legs.push(leg);
+  }
+  trip.legs.sort((a, b) => (a.date + a.time) > (b.date + b.time) ? 1 : -1);
+  save(); render(); closeLegModal();
+}
+
+function deleteLeg(tripId, legId) {
+  const trip = data.trips.find(t => t.id === tripId);
+  trip.legs = trip.legs.filter(l => l.id !== legId);
+  save(); render();
+}
+
+// ─── ACCOMMODATION CRUD ───────────────────────────────────────────────────────
+function openAccomModal(tripId) {
+  currentTripId = tripId;
+  editingAccomId = null;
+  pendingAccomDocs = [];
+  document.getElementById('accomModalTitle').textContent = 'Add Accommodation';
+  ['accomName','accomAddress','accomCheckin','accomCheckout','accomBooking','accomNotes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('accomFilePreview').innerHTML = '';
+  document.getElementById('accomModal').classList.add('open');
+}
+
+function editAccom(tripId, accomId) {
+  const trip = data.trips.find(t => t.id === tripId);
+  const a = trip.accoms.find(a => a.id === accomId);
+  currentTripId = tripId;
+  editingAccomId = accomId;
+  pendingAccomDocs = [...(a.docs || [])];
+  document.getElementById('accomModalTitle').textContent = 'Edit Accommodation';
+  document.getElementById('accomName').value = a.name || '';
+  document.getElementById('accomAddress').value = a.address || '';
+  document.getElementById('accomCheckin').value = a.checkin || '';
+  document.getElementById('accomCheckout').value = a.checkout || '';
+  document.getElementById('accomBooking').value = a.booking || '';
+  document.getElementById('accomNotes').value = a.notes || '';
+  renderFilePreview('accomFilePreview', pendingAccomDocs, 'accom');
+  document.getElementById('accomModal').classList.add('open');
+}
+
+function closeAccomModal() { document.getElementById('accomModal').classList.remove('open'); }
+
+function handleAccomFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    pendingAccomDocs.push({ id: uid(), name: file.name, data: ev.target.result });
+    renderFilePreview('accomFilePreview', pendingAccomDocs, 'accom');
+  };
+  reader.readAsDataURL(file);
+}
+
+function saveAccom() {
+  const name = document.getElementById('accomName').value.trim();
+  if (!name) return toast('Please enter accommodation name');
+  const trip = data.trips.find(t => t.id === currentTripId);
+
+  if (editingAccomId) {
+    const a = trip.accoms.find(a => a.id === editingAccomId);
+    a.name = name;
+    a.address = document.getElementById('accomAddress').value.trim();
+    a.checkin = document.getElementById('accomCheckin').value;
+    a.checkout = document.getElementById('accomCheckout').value;
+    a.booking = document.getElementById('accomBooking').value.trim().toUpperCase();
+    a.notes = document.getElementById('accomNotes').value.trim();
+    a.docs = [...pendingAccomDocs];
+  } else {
+    const accom = {
+      id: uid(),
+      name,
+      address: document.getElementById('accomAddress').value.trim(),
+      checkin: document.getElementById('accomCheckin').value,
+      checkout: document.getElementById('accomCheckout').value,
+      booking: document.getElementById('accomBooking').value.trim().toUpperCase(),
+      notes: document.getElementById('accomNotes').value.trim(),
+      docs: [...pendingAccomDocs]
+    };
+    trip.accoms.push(accom);
+  }
+  save(); render(); closeAccomModal();
+}
+
+function deleteAccom(tripId, accomId) {
+  const trip = data.trips.find(t => t.id === tripId);
+  trip.accoms = trip.accoms.filter(a => a.id !== accomId);
+  save(); render();
+}
+
+// ─── UTILS ───────────────────────────────────────────────────────────────────
+function copyRef(ref) {
+  navigator.clipboard.writeText(ref).then(() => toast(`Copied: ${ref}`)).catch(() => toast('Copy failed'));
+}
+
+function openMaps(query) {
+  window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
+}
+
+// ─── EXPORT ──────────────────────────────────────────────────────────────────
+function openExport(tripId) {
+  const trip = data.trips.find(t => t.id === tripId);
+  let txt = `✈ JOURNEY TRACKER — ${trip.name.toUpperCase()}\n`;
+  txt += '━'.repeat(40) + '\n\n';
+
+  if (trip.legs && trip.legs.length) {
+    txt += '🚀 TRANSPORT\n' + '─'.repeat(30) + '\n';
+    trip.legs.forEach(l => {
+      txt += `${modeEmoji[l.mode] || ''} ${l.mode.toUpperCase()}\n`;
+      txt += `   ${l.from} → ${l.to}\n`;
+      if (l.date || l.time) txt += `   📅 ${l.date || ''}${l.time ? ' at ' + l.time : ''}\n`;
+      if (l.provider) txt += `   🏢 ${l.provider}\n`;
+      if (l.booking) txt += `   🔖 Ref: ${l.booking}\n`;
+      if (l.notes) txt += `   📌 ${l.notes}\n`;
+      txt += '\n';
+    });
+  }
+
+  if (trip.accoms && trip.accoms.length) {
+    txt += '🏨 ACCOMMODATION\n' + '─'.repeat(30) + '\n';
+    trip.accoms.forEach(a => {
+      txt += `${a.name}\n`;
+      if (a.address) txt += `   📍 ${a.address}\n`;
+      if (a.checkin || a.checkout) txt += `   📅 ${a.checkin || '?'} → ${a.checkout || '?'}\n`;
+      if (a.booking) txt += `   🔖 Ref: ${a.booking}\n`;
+      if (a.notes) txt += `   📌 ${a.notes}\n`;
+      txt += '\n';
+    });
+  }
+
+  txt += '─'.repeat(40) + '\nGenerated by Journey Tracker';
+  document.getElementById('exportText').textContent = txt;
+  document.getElementById('exportModal').classList.add('open');
+}
+
+function closeExportModal() { document.getElementById('exportModal').classList.remove('open'); }
+
+function copyExport() {
+  navigator.clipboard.writeText(document.getElementById('exportText').textContent)
+    .then(() => toast('Summary copied!'))
+    .catch(() => toast('Copy failed'));
+}
+
+// ─── CLOSE MODALS ON OVERLAY CLICK ───────────────────────────────────────────
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.remove('open');
+  });
+});
+
+// ─── UPCOMING TRIPS ───────────────────────────────────────────────────────────
+function renderUpcoming() {
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const todayStr = today.toISOString().slice(0,10);
+
+  // Gather all future legs and accoms with dates
+  let items = [];
+  data.trips.forEach(trip => {
+    (trip.legs||[]).forEach(leg => {
+      if (leg.date && leg.date >= todayStr) {
+        items.push({ type: 'leg', date: leg.date, time: leg.time||'', trip, leg });
+      }
+    });
+    (trip.accoms||[]).forEach(accom => {
+      if (accom.checkin && accom.checkin >= todayStr) {
+        items.push({ type: 'accom', date: accom.checkin, time: '', trip, accom });
+      }
+    });
+  });
+
+  items.sort((a,b) => (a.date+a.time) > (b.date+b.time) ? 1 : -1);
+  items = items.slice(0, 10);
+
+  const container = document.getElementById('upcomingSection');
+  if (!container) return;
+
+  if (!items.length) {
+    container.innerHTML = `
+      <div class="upcoming-title">Upcoming</div>
+      <div class="no-upcoming">No upcoming travel — add a trip to get started ✈️</div>`;
+    return;
+  }
+
+  const fmt = d => {
+    if (!d) return '';
+    const [y,m,day] = d.split('-');
+    return new Date(y,m-1,day).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+  };
+
+  const daysUntil = d => {
+    const target = new Date(d);
+    target.setHours(0,0,0,0);
+    const diff = Math.round((target - today) / 86400000);
+    if (diff === 0) return 'Today';
+    if (diff === 1) return 'Tomorrow';
+    return `${diff}d`;
+  };
+
+  const cards = items.map(item => {
+    if (item.type === 'leg') {
+      const l = item.leg;
+      const isToday = item.date === todayStr;
+      return `
+        <div class="upcoming-card ${isToday ? 'today-card' : ''}" onclick="editLeg('${item.trip.id}','${l.id}')">
+          <div class="uc-days">${daysUntil(item.date)}</div>
+          <div class="uc-mode">${modeEmoji[l.mode]||'🚗'}</div>
+          <div class="uc-route">${l.from}<span class="uc-arrow">→</span>${l.to}</div>
+          <div class="uc-date">${fmt(item.date)}${l.time ? ' · '+l.time : ''}</div>
+          <div class="uc-trip">${item.trip.name}</div>
+        </div>`;
+    } else {
+      const a = item.accom;
+      const isToday = item.date === todayStr;
+      return `
+        <div class="upcoming-card accom-card ${isToday ? 'today-card' : ''}" onclick="editAccom('${item.trip.id}','${a.id}')">
+          <div class="uc-days">${daysUntil(item.date)}</div>
+          <div class="uc-mode">🏨</div>
+          <div class="uc-route">${a.name}</div>
+          <div class="uc-date">Check-in ${fmt(item.date)}</div>
+          <div class="uc-trip">${item.trip.name}</div>
+        </div>`;
+    }
+  }).join('');
+
+  container.innerHTML = `
+    <div class="upcoming-title">Upcoming</div>
+    <div class="upcoming-scroll">${cards}</div>`;
+}
+
+function scrollToTrip(id) {
+  const el = document.getElementById('trip-' + id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // Ensure body is expanded
+  const body = document.getElementById('body-' + id);
+  if (body) body.style.display = '';
+}
+
+
+render();
+</script>
+</body>
+</html>
